@@ -378,8 +378,8 @@ label.burger::before{ content: none !important; }
     transform: translateY(16px) scale(.995);
     will-change: opacity, transform;
     transition:
-      opacity 520ms var(--easing, cubic-bezier(.2,.7,.2,1)),
-      transform 520ms var(--easing, cubic-bezier(.2,.7,.2,1));
+      opacity 420ms var(--easing, cubic-bezier(.2,.7,.2,1)),
+      transform 420ms var(--easing, cubic-bezier(.2,.7,.2,1));
   }
   .reveal[data-reveal="up"]    { transform: translateY(16px)  scale(.995); }
   .reveal[data-reveal="down"]  { transform: translateY(-16px) scale(.995); }

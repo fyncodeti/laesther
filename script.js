@@ -1,5 +1,5 @@
 /* ==========================================================================
-   script.js — La’Esther
+   script.js - La’Esther
    - Header (burger + focus-trap + overlay)
    - Reveal (IntersectionObserver)
    - Header elevation + FAB (scroll unificado)
@@ -63,7 +63,7 @@ const prefersReducedMotion = (() => {
     if (first) first.focus();
     document.addEventListener("keydown", trapFocus);
 
-    // >>> ADIÇÃO: memoriza posição e aplica guarda contra micro-scroll
+    // memoriza posição e aplica guarda contra micro-scroll
     openScrollY = window.scrollY || 0;
     openGuardUntil = (window.performance?.now?.() || Date.now()) + 250; // 250ms de proteção
   }
@@ -97,7 +97,7 @@ const prefersReducedMotion = (() => {
     }
   });
 
-  // Fechar menu ao rolar — COM histerese e proteção a micro-scroll
+  // Fechar menu ao rolar - com histerese e proteção a micro-scroll
   window.addEventListener("scroll", () => {
     if (!header.classList.contains("is-open")) return;
 
@@ -214,6 +214,7 @@ const prefersReducedMotion = (() => {
    4) SCROLLSPY
    - Ativa .is-active e aria-current="page" no link da seção visível
    - IO primário com thresholds; fallback com rAF
+   - Correção: não acumular listeners nem observers no resize
    ========================= */
 (() => {
   const nav = document.getElementById("primary-nav");
@@ -239,6 +240,8 @@ const prefersReducedMotion = (() => {
   if (!map.size) return;
 
   // Helpers para estado ativo
+  let activeId = null;
+
   function setActive(id) {
     for (const { link } of map.values()) {
       link.classList.remove("is-active");
@@ -253,8 +256,6 @@ const prefersReducedMotion = (() => {
   }
 
   function closestActiveByGeometry() {
-    // Fallback: ativa a seção cujo intervalo [top, bottom] contém o ponto de ativação,
-    // senão a mais próxima desse ponto.
     const hh = getHeaderHeight();
     const activationY = hh + Math.round(window.innerHeight * 0.3); // ~30% abaixo do header
     let bestId = null;
@@ -265,69 +266,14 @@ const prefersReducedMotion = (() => {
       const top = rect.top;
       const bottom = rect.bottom;
       if (activationY >= top && activationY <= bottom) {
-        // Dentro da seção: prioriza imediatamente
-        const dist = 0;
-        if (dist < bestDist) { bestDist = dist; bestId = id; }
+        bestId = id;
+        bestDist = 0;
       } else {
         const dist = Math.min(Math.abs(top - activationY), Math.abs(bottom - activationY));
         if (dist < bestDist) { bestDist = dist; bestId = id; }
       }
     }
     return bestId;
-  }
-
-  let activeId = null;
-
-  // IO primário
-  function setupObserver() {
-    const hh = getHeaderHeight();
-    const topOffset = hh + Math.round(window.innerHeight * 0.3); // ~30% da viewport abaixo do header
-    // Move a caixa de observação para considerar o header e uma margem inferior
-    const rootMargin = `-${topOffset}px 0px -45% 0px`;
-    const thresholds = [0, 0.25, 0.5, 0.75, 1];
-
-    // Guardamos o "score" mais recente por seção
-    const scores = new Map();
-
-    const io = new IntersectionObserver((entries) => {
-      for (const entry of entries) {
-        const id = entry.target.id;
-        // Score híbrido: 80% pelo intersectionRatio + 20% pela proximidade do ponto de ativação
-        const activationY = hh + Math.round(window.innerHeight * 0.3);
-        const prox = 1 / (1 + Math.abs(entry.boundingClientRect.top - activationY)); // 0..1
-        const score = entry.isIntersecting ? (entry.intersectionRatio * 0.8 + prox * 0.2) : 0;
-        scores.set(id, score);
-      }
-      // Escolhe a seção com maior score
-      let bestId = null, bestScore = -1;
-      for (const [id, score] of scores.entries()) {
-        if (score > bestScore) { bestScore = score; bestId = id; }
-      }
-      if (bestId && bestId !== activeId) setActive(bestId);
-    }, { root: null, rootMargin, threshold: thresholds });
-
-    // Observar apenas seções mapeadas
-    for (const { section } of map.values()) {
-      io.observe(section);
-    }
-
-    // Atualiza margens ao redimensionar (para manter proporção ~30%)
-    let resizeRaf = null;
-    const onResize = () => {
-      if (resizeRaf) return;
-      resizeRaf = requestAnimationFrame(() => {
-        // Recriar o observer com novo rootMargin
-        io.disconnect();
-        setupObserver(); // simples e seguro (early return impede loop infinito)
-      });
-    };
-    window.addEventListener("resize", onResize, { passive: true });
-
-    // Retorna cleanup para evitar vazamento se necessário (não usamos aqui)
-    return () => {
-      window.removeEventListener("resize", onResize);
-      io.disconnect();
-    };
   }
 
   // Fallback rAF (sem IO)
@@ -344,8 +290,61 @@ const prefersReducedMotion = (() => {
     };
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll, { passive: true });
-    // Estado inicial
     onScroll();
+  }
+
+  // IO primário com rebuild seguro no resize
+  const supportsIO = "IntersectionObserver" in window && !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  let cleanupObserver = null;
+  let resizeRaf = null;
+
+  function buildObserver() {
+    const hh = getHeaderHeight();
+    const topOffset = hh + Math.round(window.innerHeight * 0.3);
+    const rootMargin = `-${topOffset}px 0px -45% 0px`;
+    const thresholds = [0, 0.25, 0.5, 0.75, 1];
+
+    const scores = new Map();
+
+    const io = new IntersectionObserver((entries) => {
+      const hhNow = getHeaderHeight();
+      const activationY = hhNow + Math.round(window.innerHeight * 0.3);
+
+      for (const entry of entries) {
+        const id = entry.target.id;
+        const prox = 1 / (1 + Math.abs(entry.boundingClientRect.top - activationY)); // 0..1
+        const score = entry.isIntersecting ? (entry.intersectionRatio * 0.8 + prox * 0.2) : 0;
+        scores.set(id, score);
+      }
+
+      let bestId = null, bestScore = -1;
+      for (const [id, score] of scores.entries()) {
+        if (score > bestScore) { bestScore = score; bestId = id; }
+      }
+      if (bestId && bestId !== activeId) setActive(bestId);
+    }, { root: null, rootMargin, threshold: thresholds });
+
+    for (const { section } of map.values()) io.observe(section);
+
+    return () => io.disconnect();
+  }
+
+  function rebuildObserver() {
+    if (!supportsIO) return;
+    if (cleanupObserver) cleanupObserver();
+    cleanupObserver = buildObserver();
+  }
+
+  function onResizeRebuild() {
+    if (!supportsIO) return;
+    if (resizeRaf) return;
+    resizeRaf = requestAnimationFrame(() => {
+      resizeRaf = null;
+      rebuildObserver();
+      const id = closestActiveByGeometry();
+      if (id && id !== activeId) setActive(id);
+    });
   }
 
   // Click otimista nos links (sem interferir no smooth scroll que você já tem)
@@ -362,11 +361,13 @@ const prefersReducedMotion = (() => {
     if (id && map.has(id)) setActive(id);
   });
 
-  // Inicialização
-  const supportsIO = "IntersectionObserver" in window && !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   if (supportsIO) {
-    setupObserver();
-    // Garante estado inicial coerente
+    // inicializa observer uma vez
+    rebuildObserver();
+    // um único listener de resize para rebuild
+    window.addEventListener("resize", onResizeRebuild, { passive: true });
+
+    // estado inicial coerente
     const initial = (location.hash || "").replace("#", "") || closestActiveByGeometry();
     if (initial && map.has(initial)) setActive(initial);
   } else {
@@ -415,7 +416,7 @@ const prefersReducedMotion = (() => {
 
 /* =========================
    6) HERO ROTATOR
-   - Rotação suave da palavra após “Essência Materna —”
+   - Rotação suave da palavra após “Essência Materna -”
    - Efeito “carregando” com pontinhos
    - Respeita prefers-reduced-motion
    ========================= */

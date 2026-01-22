@@ -19,9 +19,9 @@
     <meta name="twitter:card" content="summary_large_image" />
     <link rel="icon" type="image/png" sizes="32x32" href="./assets/icons/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="./assets/icons/favicon-16x16.png">
-    <link rel="icon" type="image/svg+xml" href="/assets/icon.svg" />
+    <!-- <link rel="icon" type="image/svg+xml" href="/assets/icon.svg" /> -->
     <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png" />
-    <link rel="manifest" href="/site.webmanifest" />
+    <!-- <link rel="manifest" href="/site.webmanifest" /> -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -68,6 +68,7 @@
           <ul class="nav__list">
             <li><a class="nav__link is-active" href="#inicio">Início</a></li>
             <li><a class="nav__link" href="#sobre">Sobre</a></li>
+            <li><a class="nav__link" href="#institucional">Institucional</a></li>
             <li><a class="nav__link" href="#servicos">Serviços</a></li>
             <li><a class="nav__link" href="#equipe">Equipe</a></li>
           </ul>
@@ -193,6 +194,87 @@
         </div>
       </section>
 
+      <!-- ========================= INSTITUCIONAL ========================= -->
+      <section id="institucional" class="institucional reveal" aria-labelledby="institucional-title">
+        <div class="container institucional__inner">
+          <h2 id="institucional-title" class="section__title">Missão, Visão e Valores</h2>
+          <p class="section__intro">
+            Direcionamento claro para um cuidado especializado, ético e acolhedor, com foco na saúde integral da mulher.
+          </p>
+
+          <div class="institucional__mvvs">
+            <article class="mvvs-card reveal" data-reveal="up">
+              <div class="mvvs-card__icon" aria-hidden="true">
+                <i class="fa-solid fa-compass"></i>
+              </div>
+              <h3 class="mvvs-card__title">Missão</h3>
+              <p class="mvvs-card__text">
+                Cuidar da saúde da mulher com excelência técnica e atendimento individualizado, oferecendo soluções seguras, acolhedoras, éticas e eficazes.
+              </p>
+            </article>
+
+            <article class="mvvs-card reveal" data-reveal="up" data-reveal-delay="100">
+              <div class="mvvs-card__icon" aria-hidden="true">
+                <i class="fa-solid fa-eye"></i>
+              </div>
+              <h3 class="mvvs-card__title">Visão</h3>
+              <p class="mvvs-card__text">
+                Ser referência em qualidade, inovação e resultados na fisioterapia e no cuidado especializado à mulher.
+              </p>
+            </article>
+
+            <article class="mvvs-card reveal" data-reveal="up" data-reveal-delay="200">
+              <div class="mvvs-card__icon" aria-hidden="true">
+                <i class="fa-solid fa-handshake"></i>
+              </div>
+              <h3 class="mvvs-card__title">Valores</h3>
+              <ul class="mvvs-card__list">
+                <li>Excelência</li>
+                <li>Ética</li>
+                <li>Inovação</li>
+                <li>Acolhimento</li>
+                <li>Transparência</li>
+                <li>Responsabilidade</li>
+              </ul>
+            </article>
+          </div>
+
+          <div class="institucional__diferenciais reveal" data-reveal="up" data-reveal-delay="260" aria-labelledby="diferenciais-title">
+            <h3 id="diferenciais-title" class="institucional__subtitle">
+              <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+              Diferenciais da Clínica
+            </h3>
+
+            <div class="institucional__text">
+              <p>
+                Nossa clínica é especializada no cuidado integral da saúde da mulher, oferecendo atendimentos baseados em evidências científicas, com abordagem individualizada e humanizada. Cada paciente é avaliada de forma única, respeitando sua história, suas necessidades e seus objetivos.
+              </p>
+              <p>
+                Contamos com profissionais qualificados e constantemente atualizados, que atuam com ética, responsabilidade e excelência técnica. Os atendimentos são realizados de maneira personalizada, garantindo atenção, segurança e qualidade em cada etapa do cuidado.
+              </p>
+              <p>
+                Nosso espaço foi cuidadosamente planejado para proporcionar conforto, privacidade e acolhimento, favorecendo uma experiência tranquila e segura. Utilizamos recursos terapêuticos modernos, protocolos atualizados e estratégias que promovem funcionalidade, bem-estar e autonomia.
+              </p>
+              <p>
+                Além do cuidado físico, valorizamos a escuta ativa, a orientação clara e a educação em saúde, fortalecendo o vínculo com cada paciente e promovendo decisões conscientes ao longo de todo o acompanhamento.
+              </p>
+            </div>
+          </div>
+
+          <aside class="aviso reveal" data-reveal="up" data-reveal-delay="320" role="note" aria-label="Aviso importante">
+            <div class="aviso__icon" aria-hidden="true">
+              <i class="fa-solid fa-circle-info"></i>
+            </div>
+            <div class="aviso__content">
+              <h3 class="aviso__title">Aviso importante</h3>
+              <p class="aviso__text">
+                As informações disponibilizadas neste site têm caráter educativo e institucional, não substituindo avaliação, diagnóstico ou tratamento individual realizado por profissional de saúde habilitado. Os atendimentos são realizados de acordo com as normas éticas e técnicas da fisioterapia, respeitando a individualidade, a privacidade e a segurança de cada paciente.
+              </p>
+            </div>
+          </aside>
+        </div>
+      </section>
+
       <!-- ========================= SERVIÇOS ========================= -->
       <section id="servicos" class="servicos reveal" aria-labelledby="servicos-title">
         <div class="container servicos__inner">
@@ -206,29 +288,49 @@
               <div class="servico-card__icon">
                 <i class="fa-solid fa-heart-pulse"></i>
               </div>
-              <h3 class="servico-card__title">Fisioterapia Pélvica Obstétrica</h3>
+              <h3 class="servico-card__title">Fisioterapia Pélvica</h3>
               <p class="servico-card__desc">
-                Alívio de dores, preparo para o parto, e recuperação funcional com técnicas baseadas em evidências.
+                Avaliação e tratamento do assoalho pélvico para dor, perdas urinárias, fortalecimento e prevenção.
               </p>
             </article>
 
             <article class="servico-card reveal" data-reveal="up" data-reveal-delay="100">
               <div class="servico-card__icon">
-                <i class="fa-solid fa-person-walking"></i>
+                <i class="fa-solid fa-person-pregnant"></i>
               </div>
-              <h3 class="servico-card__title">Pilates na Gestação</h3>
+              <h3 class="servico-card__title">Fisioterapia Obstétrica</h3>
               <p class="servico-card__desc">
-                Movimento como terapia: força, mobilidade e respiração para uma gestação leve e saudável.
+                Alívio de desconfortos na gestação, preparo para o parto e orientações com base em evidências.
               </p>
             </article>
 
             <article class="servico-card reveal" data-reveal="up" data-reveal-delay="200">
               <div class="servico-card__icon">
-                <i class="fa-solid fa-spa"></i>
+                <i class="fa-solid fa-person-walking"></i>
               </div>
-              <h3 class="servico-card__title">Reabilitação Pós-Parto</h3>
+              <h3 class="servico-card__title">Pilates Gestacional</h3>
               <p class="servico-card__desc">
-                Fortalecimento e reequilíbrio corporal no retorno ao seu ritmo, com segurança e acolhimento.
+                Força, mobilidade e respiração para uma gestação mais leve, com segurança e acompanhamento.
+              </p>
+            </article>
+
+            <article class="servico-card reveal" data-reveal="up" data-reveal-delay="300">
+              <div class="servico-card__icon">
+                <i class="fa-solid fa-venus"></i>
+              </div>
+              <h3 class="servico-card__title">Pilates para Mulheres</h3>
+              <p class="servico-card__desc">
+                Treino terapêutico para postura, dores, fortalecimento do core e bem-estar no dia a dia.
+              </p>
+            </article>
+
+            <article class="servico-card reveal" data-reveal="up" data-reveal-delay="400">
+              <div class="servico-card__icon">
+                <i class="fa-solid fa-hand-holding-heart"></i>
+              </div>
+              <h3 class="servico-card__title">Acompanhamento de Parto</h3>
+              <p class="servico-card__desc">
+                Suporte físico e orientações para o parto, com foco em conforto, confiança e protagonismo.
               </p>
             </article>
           </div>

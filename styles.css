@@ -381,10 +381,10 @@ label.burger::before{ content: none !important; }
       opacity 420ms var(--easing, cubic-bezier(.2,.7,.2,1)),
       transform 420ms var(--easing, cubic-bezier(.2,.7,.2,1));
   }
-  .reveal[data-reveal="up"]    { transform: translateY(16px)  scale(.995); }
-  .reveal[data-reveal="down"]  { transform: translateY(-16px) scale(.995); }
-  .reveal[data-reveal="left"]  { transform: translateX(16px)  scale(.995); }
-  .reveal[data-reveal="right"] { transform: translateX(-16px) scale(.995); }
+  .reveal[data-reveal="up"]    { transform: translateY(12px)  scale(.995); }
+  .reveal[data-reveal="down"]  { transform: translateY(-12px) scale(.995); }
+  .reveal[data-reveal="left"]  { transform: translateX(12px)  scale(.995); }
+  .reveal[data-reveal="right"] { transform: translateX(-12px) scale(.995); }
   .reveal[data-reveal="zoom"]  { transform: scale(.975); }
   .reveal-in { opacity: 1; transform: none; }
   .reveal { transition-delay: calc(var(--reveal-delay, 0) * 1ms); }
@@ -796,6 +796,128 @@ label.burger::before{ content: none !important; }
   font-size: 1rem;
   color: color-mix(in srgb, var(--color-ink) 92%, var(--color-sage-400));
   margin: 0;
+}
+
+/* =========================
+   FAQ
+========================= */
+.faq{
+  padding-block: clamp(3rem, 6vw, 6rem);
+  display: flow-root;
+  background:
+    radial-gradient(900px 520px at 15% 15%, color-mix(in srgb, var(--color-sage-100) 22%, transparent), transparent 60%),
+    radial-gradient(900px 520px at 85% 85%, color-mix(in srgb, var(--color-lilac) 14%, transparent), transparent 60%),
+    linear-gradient(180deg, color-mix(in srgb, #fff 55%, var(--color-bg) 45%), var(--color-bg));
+  border-top: 1px solid color-mix(in srgb, var(--color-primary) 14%, transparent);
+}
+
+.faq__inner{
+  max-width: 980px;
+  margin-inline: auto;
+  text-align: center;
+}
+
+.faq__list{
+  margin-top: clamp(1.25rem, 2.5vw, 2rem);
+  display: grid;
+  gap: .9rem;
+  text-align: left;
+}
+
+/* Item */
+.faq__item{
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 10px 28px rgba(0,0,0,.08);
+  overflow: clip;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 10%, transparent);
+  transition: transform 280ms var(--easing), box-shadow 280ms var(--easing), border-color 280ms var(--easing);
+}
+
+.faq__item[open]{
+  border-color: color-mix(in srgb, var(--color-primary) 22%, transparent);
+  box-shadow: 0 14px 34px rgba(0,0,0,.12);
+}
+
+.faq__list{ gap: 1.15rem; }
+
+@media (prefers-reduced-motion: no-preference){
+  .faq__item:hover{
+    transform: translateY(-0.5px);
+    box-shadow: 0 12px 30px rgba(0,0,0,.12);
+  }
+}
+
+/* Summary */
+.faq__summary{
+  cursor: pointer;
+  list-style: none;
+  padding: 1.05rem 1.1rem;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: .85rem;
+  align-items: center;
+  user-select: none;
+  outline: none;
+}
+
+.faq__summary::-webkit-details-marker{ display: none; }
+
+.faq__q{
+  display: inline-flex;
+  align-items: center;
+  gap: .65rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  line-height: 1.3;
+}
+
+.faq__q i{
+  color: var(--color-primary);
+  opacity: .9;
+}
+
+/* Chevron desenhado no CSS */
+.faq__chev{
+  inline-size: 12px;
+  block-size: 12px;
+  border-right: 2px solid color-mix(in srgb, var(--color-primary) 80%, #0000);
+  border-bottom: 2px solid color-mix(in srgb, var(--color-primary) 80%, #0000);
+  transform: rotate(45deg);
+  transition: transform 220ms var(--easing);
+  margin-right: .25rem;
+}
+
+.faq__item[open] .faq__chev{
+  transform: rotate(225deg);
+}
+
+/* Foco */
+.faq__summary:focus-visible{
+  border-radius: 14px;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-lilac) 35%, transparent);
+}
+
+/* Answer */
+.faq__a{
+  padding: 0 1.1rem 1.1rem 1.1rem;
+}
+
+.faq__a p{
+  margin: .35rem 0 0 0;
+  color: color-mix(in srgb, var(--color-ink) 92%, var(--color-sage-400));
+  line-height: 1.75;
+  font-size: 1rem;
+}
+
+/* Mobile refinements */
+@media (max-width: 520px){
+  .faq__summary{
+    padding: 1rem 1rem;
+  }
+  .faq__a{
+    padding: 0 1rem 1rem 1rem;
+  }
 }
 
 /* =========================

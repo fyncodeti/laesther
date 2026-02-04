@@ -33,7 +33,7 @@ const prefersReducedMotion = (() => {
   const FOCUSABLE = 'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])';
   let lastFocused = null;
 
-  // --- NOVOS controles para evitar fechamento por micro-scroll ---
+  // Controles para evitar fechamento por micro-scroll
   let openScrollY = 0;
   let openGuardUntil = 0;     // janela de proteção após abrir (ms)
   const CLOSE_DELTA = 24;     // tolerância de rolagem antes de fechar (px)
@@ -43,12 +43,16 @@ const prefersReducedMotion = (() => {
     const focusables = [...nav.querySelectorAll(FOCUSABLE)]
       .filter(el => el.offsetParent !== null);
     if (!focusables.length) return;
+
     const first = focusables[0];
     const last  = focusables[focusables.length - 1];
+
     if (e.shiftKey && document.activeElement === first) {
-      e.preventDefault(); last.focus();
+      e.preventDefault();
+      last.focus();
     } else if (!e.shiftKey && document.activeElement === last) {
-      e.preventDefault(); first.focus();
+      e.preventDefault();
+      first.focus();
     }
   }
 
@@ -58,9 +62,11 @@ const prefersReducedMotion = (() => {
     overlay.hidden = false;
     overlay.setAttribute("aria-modal", "true");
     document.body.style.overflow = "hidden";
+
     lastFocused = document.activeElement;
     const first = nav.querySelector(FOCUSABLE);
     if (first) first.focus();
+
     document.addEventListener("keydown", trapFocus);
 
     // memoriza posição e aplica guarda contra micro-scroll
@@ -74,6 +80,7 @@ const prefersReducedMotion = (() => {
     overlay.hidden = true;
     overlay.removeAttribute("aria-modal");
     document.body.style.overflow = "";
+
     if (lastFocused) lastFocused.focus();
     document.removeEventListener("keydown", trapFocus);
   }
@@ -86,57 +93,78 @@ const prefersReducedMotion = (() => {
   if (burger.checked) header.classList.add("is-open");
 
   burger.addEventListener("change", syncMenu);
-  overlay.addEventListener("click", () => { burger.checked = false; syncMenu(); });
+
+  overlay.addEventListener("click", () => {
+    burger.checked = false;
+    syncMenu();
+  });
+
   nav.addEventListener("click", (e) => {
     const target = e.target.closest("a");
-    if (target) { burger.checked = false; syncMenu(); }
-  });
-  window.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && header.classList.contains("is-open")) {
-      burger.checked = false; syncMenu();
-    }
-  });
-
-  // Fechar menu ao rolar - com histerese e proteção a micro-scroll
-  window.addEventListener("scroll", () => {
-    if (!header.classList.contains("is-open")) return;
-
-    const now = (window.performance?.now?.() || Date.now());
-    if (now < openGuardUntil) return; // ainda no período de proteção
-
-    const dy = Math.abs((window.scrollY || 0) - openScrollY);
-    if (dy > CLOSE_DELTA) {
+    if (target) {
       burger.checked = false;
       syncMenu();
     }
-  }, { passive: true });
+  });
+
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && header.classList.contains("is-open")) {
+      burger.checked = false;
+      syncMenu();
+    }
+  });
+
+  // Fechar menu ao rolar com histerese e proteção a micro-scroll
+  window.addEventListener(
+    "scroll",
+    () => {
+      if (!header.classList.contains("is-open")) return;
+
+      const now = (window.performance?.now?.() || Date.now());
+      if (now < openGuardUntil) return;
+
+      const dy = Math.abs((window.scrollY || 0) - openScrollY);
+      if (dy > CLOSE_DELTA) {
+        burger.checked = false;
+        syncMenu();
+      }
+    },
+    { passive: true }
+  );
 })();
 
 /* =========================
    2) REVEAL: IntersectionObserver
+   Ajuste: reduzir o tempo de entrada (delays menores)
 ========================= */
 (() => {
   const NODES = document.querySelectorAll(".reveal");
   if (!NODES.length) return;
 
   if (prefersReducedMotion || !("IntersectionObserver" in window)) {
-    NODES.forEach(el => el.classList.add("reveal-in"));
+    NODES.forEach((el) => el.classList.add("reveal-in"));
     return;
   }
 
-  const io = new IntersectionObserver((entries, obs) => {
-    for (const entry of entries) {
-      if (entry.isIntersecting) {
-        entry.target.classList.add("reveal-in");
-        obs.unobserve(entry.target);
+  const io = new IntersectionObserver(
+    (entries, obs) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("reveal-in");
+          obs.unobserve(entry.target);
+        }
       }
-    }
-  }, { rootMargin: "0px 0px -5% 0px", threshold: 0.15 });
+    },
+    { rootMargin: "0px 0px -5% 0px", threshold: 0.15 }
+  );
 
   NODES.forEach((el, i) => {
     const customDelay = el.getAttribute("data-reveal-delay");
     const parsed = customDelay != null ? parseInt(customDelay, 10) : NaN;
-    const delay = Number.isFinite(parsed) ? parsed : Math.min(i * 60, 360);
+
+    // Antes: i * 60 (máx 360). Agora: i * 40 (máx 240) para ficar mais rápido.
+    const delay = Number.isFinite(parsed) ? parsed : Math.min(i * 40, 240);
+
     el.style.setProperty("--reveal-delay", String(delay));
     io.observe(el);
   });
@@ -149,22 +177,11 @@ const prefersReducedMotion = (() => {
 ========================= */
 (() => {
   const header = document.querySelector(".site-header");
-  const fab    = document.querySelector(".fab-whatsapp");
+  const fab = document.querySelector(".fab-whatsapp");
   if (!header && !fab) return;
 
-  let lastY = 0, ticking = false;
-
-  function onScrollUnified() {
-    lastY = window.scrollY || 0;
-    if (!ticking) {
-      window.requestAnimationFrame(() => {
-        updateHeaderElevation(lastY);
-        updateFABVisibility(lastY);
-        ticking = false;
-      });
-      ticking = true;
-    }
-  }
+  let lastY = 0;
+  let ticking = false;
 
   function updateHeaderElevation(y) {
     header?.classList.toggle("is-elevated", y > 8);
@@ -174,6 +191,18 @@ const prefersReducedMotion = (() => {
     if (!fab) return;
     const show = y > window.innerHeight * 0.4;
     fab.classList.toggle("is-visible", show);
+  }
+
+  function onScrollUnified() {
+    lastY = window.scrollY || 0;
+    if (ticking) return;
+
+    ticking = true;
+    window.requestAnimationFrame(() => {
+      updateHeaderElevation(lastY);
+      updateFABVisibility(lastY);
+      ticking = false;
+    });
   }
 
   if (!prefersReducedMotion) {
@@ -192,20 +221,22 @@ const prefersReducedMotion = (() => {
   const links = document.querySelectorAll('a[href^="#"]:not([href="#"])');
   if (!header || !links.length) return;
 
-  links.forEach(link => {
-    link.addEventListener("click", e => {
+  links.forEach((link) => {
+    link.addEventListener("click", (e) => {
       const targetId = link.getAttribute("href").slice(1);
       const target = document.getElementById(targetId);
       if (!target) return;
+
       e.preventDefault();
 
       const headerHeight = header.offsetHeight || 0;
-      const top = target.getBoundingClientRect().top + window.scrollY - headerHeight + 4; // pequeno ajuste
+      const top =
+        target.getBoundingClientRect().top +
+        window.scrollY -
+        headerHeight +
+        4;
 
-      window.scrollTo({
-        top,
-        behavior: "smooth"
-      });
+      window.scrollTo({ top, behavior: "smooth" });
     });
   });
 })();
@@ -215,22 +246,25 @@ const prefersReducedMotion = (() => {
    - Ativa .is-active e aria-current="page" no link da seção visível
    - IO primário com thresholds; fallback com rAF
    - Correção: não acumular listeners nem observers no resize
-   ========================= */
+========================= */
 (() => {
   const nav = document.getElementById("primary-nav");
   if (!nav) return;
 
   const header = document.querySelector(".site-header");
-  // Tenta pegar a altura do header por offset; se falhar, usa CSS var ou 84px
-  const cssVar = getComputedStyle(document.documentElement).getPropertyValue("--h-header").trim();
+
+  const cssVar = getComputedStyle(document.documentElement)
+    .getPropertyValue("--h-header")
+    .trim();
   const cssVarNum = cssVar ? parseInt(cssVar, 10) : NaN;
+
   function getHeaderHeight() {
     const h = header?.offsetHeight || (Number.isFinite(cssVarNum) ? cssVarNum : 84);
     return Math.max(0, h);
   }
 
   const links = [...nav.querySelectorAll('.nav__link[href^="#"]')];
-  // Mapa id -> { section, link }
+
   const map = new Map();
   for (const a of links) {
     const id = a.getAttribute("href").slice(1);
@@ -239,7 +273,6 @@ const prefersReducedMotion = (() => {
   }
   if (!map.size) return;
 
-  // Helpers para estado ativo
   let activeId = null;
 
   function setActive(id) {
@@ -257,7 +290,7 @@ const prefersReducedMotion = (() => {
 
   function closestActiveByGeometry() {
     const hh = getHeaderHeight();
-    const activationY = hh + Math.round(window.innerHeight * 0.3); // ~30% abaixo do header
+    const activationY = hh + Math.round(window.innerHeight * 0.3);
     let bestId = null;
     let bestDist = Infinity;
 
@@ -265,36 +298,46 @@ const prefersReducedMotion = (() => {
       const rect = section.getBoundingClientRect();
       const top = rect.top;
       const bottom = rect.bottom;
+
       if (activationY >= top && activationY <= bottom) {
         bestId = id;
         bestDist = 0;
       } else {
-        const dist = Math.min(Math.abs(top - activationY), Math.abs(bottom - activationY));
-        if (dist < bestDist) { bestDist = dist; bestId = id; }
+        const dist = Math.min(
+          Math.abs(top - activationY),
+          Math.abs(bottom - activationY)
+        );
+        if (dist < bestDist) {
+          bestDist = dist;
+          bestId = id;
+        }
       }
     }
     return bestId;
   }
 
-  // Fallback rAF (sem IO)
   function setupFallback() {
     let ticking = false;
+
     const onScroll = () => {
       if (ticking) return;
       ticking = true;
+
       requestAnimationFrame(() => {
         const id = closestActiveByGeometry();
         if (id && id !== activeId) setActive(id);
         ticking = false;
       });
     };
+
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll, { passive: true });
     onScroll();
   }
 
-  // IO primário com rebuild seguro no resize
-  const supportsIO = "IntersectionObserver" in window && !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const supportsIO =
+    "IntersectionObserver" in window &&
+    !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   let cleanupObserver = null;
   let resizeRaf = null;
@@ -307,26 +350,35 @@ const prefersReducedMotion = (() => {
 
     const scores = new Map();
 
-    const io = new IntersectionObserver((entries) => {
-      const hhNow = getHeaderHeight();
-      const activationY = hhNow + Math.round(window.innerHeight * 0.3);
+    const io = new IntersectionObserver(
+      (entries) => {
+        const hhNow = getHeaderHeight();
+        const activationY = hhNow + Math.round(window.innerHeight * 0.3);
 
-      for (const entry of entries) {
-        const id = entry.target.id;
-        const prox = 1 / (1 + Math.abs(entry.boundingClientRect.top - activationY)); // 0..1
-        const score = entry.isIntersecting ? (entry.intersectionRatio * 0.8 + prox * 0.2) : 0;
-        scores.set(id, score);
-      }
+        for (const entry of entries) {
+          const id = entry.target.id;
+          const prox = 1 / (1 + Math.abs(entry.boundingClientRect.top - activationY));
+          const score = entry.isIntersecting
+            ? entry.intersectionRatio * 0.8 + prox * 0.2
+            : 0;
+          scores.set(id, score);
+        }
 
-      let bestId = null, bestScore = -1;
-      for (const [id, score] of scores.entries()) {
-        if (score > bestScore) { bestScore = score; bestId = id; }
-      }
-      if (bestId && bestId !== activeId) setActive(bestId);
-    }, { root: null, rootMargin, threshold: thresholds });
+        let bestId = null;
+        let bestScore = -1;
+        for (const [id, score] of scores.entries()) {
+          if (score > bestScore) {
+            bestScore = score;
+            bestId = id;
+          }
+        }
+
+        if (bestId && bestId !== activeId) setActive(bestId);
+      },
+      { root: null, rootMargin, threshold: thresholds }
+    );
 
     for (const { section } of map.values()) io.observe(section);
-
     return () => io.disconnect();
   }
 
@@ -339,15 +391,16 @@ const prefersReducedMotion = (() => {
   function onResizeRebuild() {
     if (!supportsIO) return;
     if (resizeRaf) return;
+
     resizeRaf = requestAnimationFrame(() => {
       resizeRaf = null;
       rebuildObserver();
+
       const id = closestActiveByGeometry();
       if (id && id !== activeId) setActive(id);
     });
   }
 
-  // Click otimista nos links (sem interferir no smooth scroll que você já tem)
   nav.addEventListener("click", (e) => {
     const a = e.target.closest('.nav__link[href^="#"]');
     if (!a) return;
@@ -355,19 +408,15 @@ const prefersReducedMotion = (() => {
     if (map.has(id)) setActive(id);
   });
 
-  // Sincroniza ao trocar hash (back/forward)
   window.addEventListener("hashchange", () => {
     const id = (location.hash || "").replace("#", "");
     if (id && map.has(id)) setActive(id);
   });
 
   if (supportsIO) {
-    // inicializa observer uma vez
     rebuildObserver();
-    // um único listener de resize para rebuild
     window.addEventListener("resize", onResizeRebuild, { passive: true });
 
-    // estado inicial coerente
     const initial = (location.hash || "").replace("#", "") || closestActiveByGeometry();
     if (initial && map.has(initial)) setActive(initial);
   } else {
@@ -379,7 +428,7 @@ const prefersReducedMotion = (() => {
    5) DETAILS LABEL TOGGLER (Equipe)
    - Alterna o texto do <summary> ao abrir/fechar <details>
    - Suporta rótulos customizados via data-open/data-closed
-   ========================= */
+========================= */
 (() => {
   const detailsList = document.querySelectorAll(".pro-card__details");
   if (!detailsList.length) return;
@@ -388,16 +437,13 @@ const prefersReducedMotion = (() => {
     const summary = dt.querySelector("summary");
     if (!summary) return;
 
-    // Rótulos: use data-closed / data-open no <summary> se quiser customizar
     const CLOSED = summary.getAttribute("data-closed") || "Ler história completa";
-    const OPEN   = summary.getAttribute("data-open")   || "Ler menos";
+    const OPEN = summary.getAttribute("data-open") || "Ler menos";
 
-    // Garante um span para manipular só o texto (caso o summary ganhe ícones no futuro)
     let label = summary.querySelector(".summary__label");
     if (!label) {
       label = document.createElement("span");
       label.className = "summary__label";
-      // Zera e reaplica como label (evita duplicar espaços/ícones ocultos)
       summary.textContent = "";
       summary.appendChild(label);
     }
@@ -408,7 +454,6 @@ const prefersReducedMotion = (() => {
       summary.setAttribute("aria-expanded", isOpen ? "true" : "false");
     }
 
-    // Estado inicial + responder ao toggle nativo do <details>
     apply();
     dt.addEventListener("toggle", apply);
   });
@@ -419,15 +464,13 @@ const prefersReducedMotion = (() => {
    - Rotação suave da palavra após “Essência Materna -”
    - Efeito “carregando” com pontinhos
    - Respeita prefers-reduced-motion
-   ========================= */
+========================= */
 (() => {
   const container = document.querySelector(".hero__rotator");
   if (!container) return;
 
-  // Honra prefers-reduced-motion: não roda nada se o usuário prefere menos movimento
   if (prefersReducedMotion) return;
 
-  // Evita inicialização dupla
   if (container.dataset.rotatorInit === "1") return;
   container.dataset.rotatorInit = "1";
 
@@ -437,14 +480,14 @@ const prefersReducedMotion = (() => {
   const words = ["Fisioterapia", "Pilates", "Reabilitação"];
   let wordIndex = 0;
 
-  const WORD_INTERVAL = 3500; // tempo para trocar de palavra
-  const DOT_INTERVAL  = 450;  // tempo entre cada variação de pontinhos
-  const MAX_DOTS      = 3;
-  const TRANSITION    = 260;  // deve bater com o CSS (hero__rotator > span)
+  const WORD_INTERVAL = 3500;
+  const DOT_INTERVAL = 450;
+  const MAX_DOTS = 3;
+  const TRANSITION = 260;
 
   let currentDots = 1;
-  let wordTimer   = null;
-  let dotTimer    = null;
+  let wordTimer = null;
+  let dotTimer = null;
 
   function render() {
     const base = words[wordIndex];
@@ -452,7 +495,6 @@ const prefersReducedMotion = (() => {
     label.textContent = base + dots;
   }
 
-  // animação de “carregando”: Fisioterapia. .. ...
   function startDots() {
     if (dotTimer) return;
     dotTimer = window.setInterval(() => {
@@ -465,27 +507,22 @@ const prefersReducedMotion = (() => {
     if (wordTimer) return;
 
     function cycleWord() {
-      // fase de saída (fade/slide out via CSS .is-hiding)
       container.classList.add("is-hiding");
 
       window.setTimeout(() => {
-        // troca de palavra no “meio” da animação
         wordIndex = (wordIndex + 1) % words.length;
-        // opcional: recomeça os pontinhos em 1 para cada nova palavra
         currentDots = 1;
         render();
         container.classList.remove("is-hiding");
       }, TRANSITION);
     }
 
-    // primeira troca depois de um intervalo completo (evita “piscar” no load)
     wordTimer = window.setTimeout(function kickoff() {
       cycleWord();
       wordTimer = window.setInterval(cycleWord, WORD_INTERVAL);
     }, WORD_INTERVAL);
   }
 
-  // Estado inicial: mostra “Fisioterapia.”
   wordIndex = 0;
   currentDots = 1;
   render();

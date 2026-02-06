@@ -162,8 +162,7 @@ const prefersReducedMotion = (() => {
     const customDelay = el.getAttribute("data-reveal-delay");
     const parsed = customDelay != null ? parseInt(customDelay, 10) : NaN;
 
-    // Antes: i * 60 (máx 360). Agora: i * 40 (máx 240) para ficar mais rápido.
-    const delay = Number.isFinite(parsed) ? parsed : Math.min(i * 40, 240);
+    const delay = Number.isFinite(parsed) ? parsed : Math.min(i * 30, 180);
 
     el.style.setProperty("--reveal-delay", String(delay));
     io.observe(el);
